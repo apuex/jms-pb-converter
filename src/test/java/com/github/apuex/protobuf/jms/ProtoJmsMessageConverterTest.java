@@ -2,9 +2,8 @@ package com.github.apuex.protobuf.jms;
 
 import org.junit.Assert;
 import org.junit.Test;
-import org.springframework.messaging.Message;
-import org.springframework.messaging.MessageHeaders;
 
+import javax.jms.*;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -17,9 +16,11 @@ public class ProtoJmsMessageConverterTest {
         .setName("me")
         .build();
 
-    Message message = converter.toMessage(payload, new MessageHeaders(null));
+    Session session = getJmsSession();
+    Message message = converter.toMessage(payload, session);
 
     Assert.assertNotNull(message);
+    session.close();
   }
 
   @Test
@@ -30,10 +31,12 @@ public class ProtoJmsMessageConverterTest {
         .setName("me")
         .build();
 
-    Message message = converter.toMessage(payload, new MessageHeaders(null));
+    Session session = getJmsSession();
+    Message message = converter.toMessage(payload, session);
 
-    Greetings expected = (Greetings) converter.fromMessage(message, Greetings.class);
+    Greetings expected = (Greetings) converter.fromMessage(message);
     Assert.assertEquals(expected, payload);
+    session.close();
   }
 
   private ProtoJmsMessageConverter getProtoJmsMessageConverter() throws Exception {
@@ -42,5 +45,9 @@ public class ProtoJmsMessageConverterTest {
     descriptors.add("/protobuf/descriptor-sets/jms-pb-converter-1.0.0.protobin");
     converter.setProtobufDescriptors(descriptors);
     return converter;
+  }
+
+  private Session getJmsSession() {
+    return null;
   }
 }

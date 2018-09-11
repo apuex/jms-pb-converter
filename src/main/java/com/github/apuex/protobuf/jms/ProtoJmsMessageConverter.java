@@ -4,28 +4,29 @@ import com.google.protobuf.DescriptorProtos;
 import com.google.protobuf.Internal;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.Parser;
-import org.springframework.messaging.Message;
-import org.springframework.messaging.MessageHeaders;
-import org.springframework.messaging.converter.MessageConverter;
-import org.springframework.util.MimeTypeUtils;
+import org.springframework.jms.support.converter.MessageConversionException;
+import org.springframework.jms.support.converter.MessageConverter;
 
+import javax.jms.BytesMessage;
+import javax.jms.JMSException;
+import javax.jms.Message;
+import javax.jms.Session;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public class ProtoJmsMessageConverter implements MessageConverter {
-  public static final String MSG_TYPE = "msgType";
   private final Map<String, Parser<? extends com.google.protobuf.Message>> msgParsers = new HashMap<>();
 
   @Override
-  public Object fromMessage(Message<?> message, Class<?> targetClass) {
-    if (isProtobufMessage(targetClass)
-        && MimeTypeUtils.APPLICATION_OCTET_STREAM.equals(message.getHeaders().get(MessageHeaders.CONTENT_TYPE))) {
+  public Object fromMessage(Message message) throws JMSException, MessageConversionException {
+    if (message instanceof BytesMessage) {
+      BytesMessage bm = (BytesMessage) message;
       try {
-        Parser<? extends com.google.protobuf.Message> parser = msgParsers.get(message.getHeaders().get(MSG_TYPE));
+        Parser<? extends com.google.protobuf.Message> parser = msgParsers.get(message.getJMSType());
         if (parser != null) {
-          return parser.parseFrom((byte[]) message.getPayload());
+          return parser.parseFrom(bm.getBody(byte[].class));
         } else {
           return null;
         }
@@ -38,28 +39,16 @@ public class ProtoJmsMessageConverter implements MessageConverter {
   }
 
   @Override
-  public Message<?> toMessage(Object payload, MessageHeaders headers) {
+  public Message toMessage(Object payload, Session session) throws JMSException, MessageConversionException {
     if (isProtobufMessage(payload)) {
-      Parser<? extends com.google.protobuf.Message> parser = msgParsers.get(payload.getClass().getName());
-      if (parser == null) {
+      if (msgParsers.containsKey(payload.getClass().getName())) {
         return null;
       }
       com.google.protobuf.Message message = (com.google.protobuf.Message) payload;
-      return new Message<Object>() {
-        @Override
-        public Object getPayload() {
-          return message.toByteArray();
-        }
-
-        @Override
-        public MessageHeaders getHeaders() {
-          final Map<String, Object> extra = new HashMap<>();
-          extra.put(MessageHeaders.CONTENT_TYPE, MimeTypeUtils.APPLICATION_OCTET_STREAM);
-          extra.put(MSG_TYPE, payload.getClass().getName());
-          headers.entrySet().forEach(e -> extra.put(e.getKey(), e.getValue()));
-          return new MessageHeaders(extra);
-        }
-      };
+      BytesMessage bm = session.createBytesMessage();
+      bm.setJMSType(payload.getClass().getName());
+      bm.writeBytes(message.toByteArray());
+      return bm;
     } else {
       return null;
     }
