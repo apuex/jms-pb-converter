@@ -1,53 +1,62 @@
 package com.github.apuex.protobuf.jms;
 
+import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
+import org.springframework.jms.core.JmsTemplate;
+import org.springframework.jms.support.converter.MessageConverter;
 
 import javax.jms.*;
 import java.util.LinkedList;
 import java.util.List;
 
 public class ProtoJmsMessageConverterTest {
+
   @Test
   public void testToMessage() throws Exception {
-    ProtoJmsMessageConverter converter = getProtoJmsMessageConverter();
-
     Greetings payload = Greetings.newBuilder()
         .setName("me")
         .build();
 
-    Session session = getJmsSession();
-    Message message = converter.toMessage(payload, session);
+    JmsTemplate template = (JmsTemplate) context.getBean(JmsTemplate.class);
+    template.send(session -> {
+      Message message = template.getMessageConverter().toMessage(payload, session);
+      Assert.assertNotNull(message);
 
-    Assert.assertNotNull(message);
-    session.close();
+      return message;
+    });
   }
 
   @Test
   public void testFromMessage() throws Exception {
-    ProtoJmsMessageConverter converter = getProtoJmsMessageConverter();
+    JmsTemplate template = (JmsTemplate) context.getBean(JmsTemplate.class);
 
     Greetings payload = Greetings.newBuilder()
         .setName("me")
         .build();
 
-    Session session = getJmsSession();
-    Message message = converter.toMessage(payload, session);
+    template.send(session -> {
+      Message message = template.getMessageConverter().toMessage(payload, session);
+      Assert.assertNotNull(message);
 
-    Greetings expected = (Greetings) converter.fromMessage(message);
-    Assert.assertEquals(expected, payload);
-    session.close();
+      Greetings expected = (Greetings) template.getMessageConverter().fromMessage(message);
+      Assert.assertEquals(expected, payload);
+
+      return message;
+    });
   }
 
-  private ProtoJmsMessageConverter getProtoJmsMessageConverter() throws Exception {
-    ProtoJmsMessageConverter converter = new ProtoJmsMessageConverter();
-    List<String> descriptors = new LinkedList<>();
-    descriptors.add("/protobuf/descriptor-sets/jms-pb-converter-1.0.0.protobin");
-    converter.setProtobufDescriptors(descriptors);
-    return converter;
+  ClassPathXmlApplicationContext context;
+
+  @Before
+  public void before() {
+    context = new ClassPathXmlApplicationContext("app-config.xml");
   }
 
-  private Session getJmsSession() {
-    return null;
+  @After
+  public void after() {
+    context.close();
   }
 }
