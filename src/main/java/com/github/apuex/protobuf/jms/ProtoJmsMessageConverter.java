@@ -26,7 +26,9 @@ public class ProtoJmsMessageConverter implements MessageConverter {
       try {
         Parser<? extends com.google.protobuf.Message> parser = msgParsers.get(message.getJMSType());
         if (parser != null) {
-          return parser.parseFrom(bm.getBody(byte[].class));
+          byte[] bytes = new byte[(int) bm.getBodyLength()];
+          bm.readBytes(bytes);
+          return parser.parseFrom(bytes);
         } else {
           return null;
         }
@@ -41,7 +43,7 @@ public class ProtoJmsMessageConverter implements MessageConverter {
   @Override
   public Message toMessage(Object payload, Session session) throws JMSException, MessageConversionException {
     if (isProtobufMessage(payload)) {
-      if (msgParsers.containsKey(payload.getClass().getName())) {
+      if (!msgParsers.containsKey(payload.getClass().getName())) {
         return null;
       }
       com.google.protobuf.Message message = (com.google.protobuf.Message) payload;
