@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package com.github.apuex.protobuf.jms;
+option java_package = "com.github.apuex.protobuf.jms";
+option java_outer_classname = "MessageTwo";
+option java_multiple_files = true;
+
+message Hello {
+  string name = 1;
+}
+
+message World {
+  string name = 1;
+}
