@@ -58,7 +58,7 @@ public class ProtoJmsMessageConverter implements MessageConverter {
 
   public void setProtobufDescriptors(List<String> l) throws Exception {
     for (String name : l) {
-      InputStream input = Class.class.getResourceAsStream(name);
+      InputStream input = getClass().getResourceAsStream(name);
       if(input == null) throw new RuntimeException(String.format("descriptor `%s` not found.", name));
       DescriptorProtos.FileDescriptorSet descriptorSet = DescriptorProtos.FileDescriptorSet.parseFrom(input);
       for (DescriptorProtos.FileDescriptorProto fdp : descriptorSet.getFileList()) {
