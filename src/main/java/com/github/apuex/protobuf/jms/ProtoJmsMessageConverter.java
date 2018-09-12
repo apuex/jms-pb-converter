@@ -30,7 +30,7 @@ public class ProtoJmsMessageConverter implements MessageConverter {
           bm.readBytes(bytes);
           return parser.parseFrom(bytes);
         } else {
-          return null;
+          throw new RuntimeException("No parser available.");
         }
       } catch (InvalidProtocolBufferException e) {
         throw new RuntimeException(e);
@@ -44,7 +44,7 @@ public class ProtoJmsMessageConverter implements MessageConverter {
   public Message toMessage(Object payload, Session session) throws JMSException, MessageConversionException {
     if (isProtobufMessage(payload)) {
       if (!msgParsers.containsKey(payload.getClass().getName())) {
-        return null;
+        throw new RuntimeException(String.format("Not supported message: %s.", payload.getClass().getName()));
       }
       com.google.protobuf.Message message = (com.google.protobuf.Message) payload;
       BytesMessage bm = session.createBytesMessage();
@@ -52,13 +52,14 @@ public class ProtoJmsMessageConverter implements MessageConverter {
       bm.writeBytes(message.toByteArray());
       return bm;
     } else {
-      return null;
+      throw new RuntimeException(String.format("Not a protobuf message: %s.", payload.getClass().getName()));
     }
   }
 
   public void setProtobufDescriptors(List<String> l) throws Exception {
     for (String name : l) {
       InputStream input = Class.class.getResourceAsStream(name);
+      if(input == null) throw new RuntimeException(String.format("descriptor `%s` not found.", name));
       DescriptorProtos.FileDescriptorSet descriptorSet = DescriptorProtos.FileDescriptorSet.parseFrom(input);
       for (DescriptorProtos.FileDescriptorProto fdp : descriptorSet.getFileList()) {
         String packageName = fdp.getOptions().getJavaPackage();
