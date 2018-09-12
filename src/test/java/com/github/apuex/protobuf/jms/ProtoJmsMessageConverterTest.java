@@ -13,7 +13,7 @@ import javax.jms.Message;
 
 
 @RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration("/test-config.xml")
+@ContextConfiguration
 @ActiveProfiles("dev")
 public class ProtoJmsMessageConverterTest {
   @Autowired
