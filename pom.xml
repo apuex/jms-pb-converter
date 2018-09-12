@@ -58,6 +58,12 @@
       <scope>provided</scope>
     </dependency>
     <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-test</artifactId>
+      <version>5.0.7.RELEASE</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
       <groupId>com.github.apuex.jms</groupId>
       <artifactId>imq-patch</artifactId>
       <version>1.0.0</version>
@@ -79,6 +85,9 @@
         <version>${maven-resource-plugin.version}</version>
         <configuration>
           <resources>
+            <resource>
+              <directory>src/main/resources</directory>
+            </resource>
             <resource>
               <directory>target/generated-resources</directory>
             </resource>

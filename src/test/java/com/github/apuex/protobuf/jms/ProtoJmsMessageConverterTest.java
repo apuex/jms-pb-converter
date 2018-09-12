@@ -1,18 +1,25 @@
 package com.github.apuex.protobuf.jms;
 
-import org.junit.After;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
-import org.springframework.context.support.ClassPathXmlApplicationContext;
+import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jms.core.JmsTemplate;
-import org.springframework.jms.support.converter.MessageConverter;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import javax.jms.*;
-import java.util.LinkedList;
-import java.util.List;
+import javax.jms.Message;
 
+
+@RunWith(SpringJUnit4ClassRunner.class)
+@ContextConfiguration("/test-config.xml")
+@ActiveProfiles("dev")
 public class ProtoJmsMessageConverterTest {
+  @Autowired
+  ProtobufMessageListenerDelegate delegate;
+  @Autowired
+  private JmsTemplate template;
 
   @Test
   public void testToMessage() throws Exception {
@@ -20,7 +27,6 @@ public class ProtoJmsMessageConverterTest {
         .setName("me")
         .build();
 
-    JmsTemplate template = (JmsTemplate) context.getBean(JmsTemplate.class);
     template.send(session -> {
       Message message = template.getMessageConverter().toMessage(payload, session);
       Assert.assertNotNull(message);
@@ -31,32 +37,12 @@ public class ProtoJmsMessageConverterTest {
 
   @Test
   public void testFromMessage() throws Exception {
-    JmsTemplate template = (JmsTemplate) context.getBean(JmsTemplate.class);
 
     Greetings payload = Greetings.newBuilder()
         .setName("me")
         .build();
 
-    template.send(session -> {
-      Message message = template.getMessageConverter().toMessage(payload, session);
-      Assert.assertNotNull(message);
-
-      Greetings expected = (Greetings) template.getMessageConverter().fromMessage(message);
-      Assert.assertEquals(expected, payload);
-
-      return message;
-    });
-  }
-
-  ClassPathXmlApplicationContext context;
-
-  @Before
-  public void before() {
-    context = new ClassPathXmlApplicationContext("app-config.xml");
-  }
-
-  @After
-  public void after() {
-    context.close();
+    Greetings expected = delegate.pop();
+    Assert.assertEquals(expected, payload);
   }
 }

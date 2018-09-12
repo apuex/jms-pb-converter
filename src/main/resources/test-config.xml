@@ -41,5 +41,25 @@
     <property name="defaultDestination" ref="eventNotifyTopic" />
     <property name="messageConverter" ref="jmsProtobufConverter" />
   </bean>
+
+  <bean id="messageListenerDelegate" class="com.github.apuex.protobuf.jms.ProtobufMessageListenerDelegate"/>
+
+  <bean id="messageListenerAdapter" class="org.springframework.jms.listener.adapter.MessageListenerAdapter">
+    <constructor-arg ref="messageListenerDelegate"/>
+    <property name="messageConverter" ref="jmsProtobufConverter"/>
+  </bean>
+
+  <bean id="taskScheduler" class="org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler">
+    <property name="poolSize" value="8"/>
+    <property name="threadNamePrefix" value="message-listener"/>
+  </bean>
+
+  <bean id="jmsMessageListenerContainer" class="org.springframework.jms.listener.DefaultMessageListenerContainer">
+    <property name="connectionFactory" ref="jmsConnectionFactory"/>
+    <property name="destination" ref="eventNotifyTopic"/>
+    <property name="messageListener" ref="messageListenerAdapter"/>
+    <property name="taskExecutor" ref="taskScheduler"/>
+  </bean>
+
 </beans>
 
