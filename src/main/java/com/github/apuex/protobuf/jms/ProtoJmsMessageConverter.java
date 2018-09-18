@@ -36,7 +36,7 @@ public class ProtoJmsMessageConverter implements MessageConverter {
         throw new RuntimeException(e);
       }
     } else {
-      return null;
+      throw new RuntimeException("Invalid message type: not a javax.jms.BytesMessage.");
     }
   }
 
@@ -59,7 +59,7 @@ public class ProtoJmsMessageConverter implements MessageConverter {
   public void setProtobufDescriptors(List<String> l) throws Exception {
     for (String name : l) {
       InputStream input = getClass().getResourceAsStream(name);
-      if(input == null) throw new RuntimeException(String.format("descriptor `%s` not found.", name));
+      if (input == null) throw new RuntimeException(String.format("descriptor `%s` not found.", name));
       DescriptorProtos.FileDescriptorSet descriptorSet = DescriptorProtos.FileDescriptorSet.parseFrom(input);
       for (DescriptorProtos.FileDescriptorProto fdp : descriptorSet.getFileList()) {
         String packageName = fdp.getOptions().getJavaPackage();
