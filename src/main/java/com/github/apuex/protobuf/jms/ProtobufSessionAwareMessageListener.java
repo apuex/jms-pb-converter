@@ -10,17 +10,22 @@ import javax.jms.Session;
 import java.util.Map;
 
 public class ProtobufSessionAwareMessageListener implements SessionAwareMessageListener<BytesMessage> {
+  private String principalNameField = "principalName";
   private MessageConverter messageConverter;
   private Map<Class<? extends Message>, ProtobufMessageHandler> messageHandlerMap;
 
   @Override
   public void onMessage(BytesMessage message, Session session) throws JMSException {
     Message m = (Message) messageConverter.fromMessage(message);
-    messageHandlerMap.get(m.getClass()).handleMessage(m, message.getStringProperty("principalName"));
+    messageHandlerMap.get(m.getClass()).handleMessage(m, message.getStringProperty(principalNameField));
   }
 
   public void setMessageConverter(MessageConverter messageConverter) {
     this.messageConverter = messageConverter;
+  }
+
+  public void setPrincipalNameField(String principalNameField) {
+    this.principalNameField = principalNameField;
   }
 
   public void setMessageHandlerMap(Map<Class<? extends Message>, ProtobufMessageHandler> messageHandlerMap) {
