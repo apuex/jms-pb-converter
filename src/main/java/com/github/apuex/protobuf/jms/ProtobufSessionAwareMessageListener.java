@@ -9,8 +9,10 @@ import javax.jms.JMSException;
 import javax.jms.Session;
 import java.util.Map;
 
+import static com.github.apuex.protobuf.jms.JmsConverterConfig.DEFAULT_PRINCIPAL_NAME_FIELD;
+
 public class ProtobufSessionAwareMessageListener implements SessionAwareMessageListener<BytesMessage> {
-  private String principalNameField = "principalName";
+  private String principalNameField = DEFAULT_PRINCIPAL_NAME_FIELD;
   private MessageConverter messageConverter;
   private Map<Class<? extends Message>, ProtobufMessageHandler> messageHandlerMap;
 
