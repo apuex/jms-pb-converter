@@ -10,16 +10,21 @@ import javax.jms.Session;
 import java.util.Map;
 
 import static com.github.apuex.protobuf.jms.JmsConverterConfig.DEFAULT_PRINCIPAL_NAME_FIELD;
+import static com.github.apuex.protobuf.jms.JmsConverterConfig.DEFAULT_RESOURCE_URI_FIELD;
 
 public class ProtobufSessionAwareMessageListener implements SessionAwareMessageListener<BytesMessage> {
   private String principalNameField = DEFAULT_PRINCIPAL_NAME_FIELD;
+  private String resourceUriField = DEFAULT_RESOURCE_URI_FIELD;
   private MessageConverter messageConverter;
   private Map<Class<? extends Message>, ProtobufMessageHandler> messageHandlerMap;
 
   @Override
   public void onMessage(BytesMessage message, Session session) throws JMSException {
     Message m = (Message) messageConverter.fromMessage(message);
-    messageHandlerMap.get(m.getClass()).handleMessage(m, message.getStringProperty(principalNameField));
+    messageHandlerMap.get(m.getClass()).handleMessage(m,
+        message.getStringProperty(principalNameField),
+        message.getStringProperty(resourceUriField)
+    );
   }
 
   public void setMessageConverter(MessageConverter messageConverter) {
@@ -28,6 +33,10 @@ public class ProtobufSessionAwareMessageListener implements SessionAwareMessageL
 
   public void setPrincipalNameField(String principalNameField) {
     this.principalNameField = principalNameField;
+  }
+
+  public void setResourceUriField(String resourceUriField) {
+    this.resourceUriField = resourceUriField;
   }
 
   public void setMessageHandlerMap(Map<Class<? extends Message>, ProtobufMessageHandler> messageHandlerMap) {
