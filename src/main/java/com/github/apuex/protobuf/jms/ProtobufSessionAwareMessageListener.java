@@ -28,9 +28,11 @@ public class ProtobufSessionAwareMessageListener implements SessionAwareMessageL
     try {
       String p = message.getStringProperty(principalNameField);
       String u = message.getStringProperty(serviceUriField);
+      message.getJMSTimestamp();
       getMessageHandler(m.getClass()).handleMessage(m,
-          (p != null ? new ProtobufJmsPrincipal(message.getStringProperty(principalNameField)): null),
-          (u != null ? new URI(message.getStringProperty(serviceUriField)): null)
+          message.getJMSTimestamp(),
+          (p != null ? new ProtobufJmsPrincipal(p): null),
+          (u != null ? new URI(u): null)
       );
     } catch (URISyntaxException e) {
       throw new RuntimeException(e);
