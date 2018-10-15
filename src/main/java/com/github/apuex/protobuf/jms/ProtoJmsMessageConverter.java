@@ -16,6 +16,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static java.lang.System.out;
+
 public class ProtoJmsMessageConverter implements MessageConverter {
   private final Map<String, Parser<? extends com.google.protobuf.Message>> msgParsers = new HashMap<>();
 
@@ -57,6 +59,7 @@ public class ProtoJmsMessageConverter implements MessageConverter {
   }
 
   public void setProtobufDescriptors(List<String> l) throws Exception {
+    StringBuilder classListBuilder = new StringBuilder();
     for (String name : l) {
       InputStream input = getClass().getResourceAsStream(name);
       if (input == null) throw new RuntimeException(String.format("descriptor `%s` not found.", name));
@@ -65,12 +68,14 @@ public class ProtoJmsMessageConverter implements MessageConverter {
         String packageName = fdp.getOptions().getJavaPackage();
         for (DescriptorProtos.DescriptorProto md : fdp.getMessageTypeList()) {
           String className = String.format("%s.%s", packageName, md.getName());
+          classListBuilder.append(className).append("\n");
           Class<com.google.protobuf.Message> clazz = (Class<com.google.protobuf.Message>) Class.forName(className);
           com.google.protobuf.Message defaultInstance = Internal.getDefaultInstance(clazz);
           msgParsers.put(className, defaultInstance.getParserForType());
         }
       }
     }
+    out.println(classListBuilder.toString());
   }
 
   private boolean isProtobufMessage(Class<?> targetClass) {
