@@ -54,7 +54,7 @@
     <dependency>
       <groupId>com.github.apuex.jms</groupId>
       <artifactId>imq-patch</artifactId>
-      <version>1.0.0</version>
+      <version>1.0.2</version>
       <scope>test</scope>
     </dependency>
     <dependency>
